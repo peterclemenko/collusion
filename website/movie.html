@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>hi</title>
+<link href="index.css" rel="stylesheet" type="text/css"/>
+<div id="chart"></div><!-- The d3 layout graph will go inside this div -->
+<script src="d3.js"></script>
+<script src="d3.layout.js"></script>
+<script src="d3.geom.js"></script>
+<script src="jquery.min.js"></script>
+<script src="collusion-addon.js"></script>
+<script src="demo.js"></script>
+<script src="graphrunner.js"></script>
+<script>
+$(window).ready(function() {
+  // get list of known trackers from trackers.json file hosted on website:
+  jQuery.getJSON("trackers.json", function(trackers) {
+    var runner = GraphRunner.Runner({
+      width: $(window).width(),
+      height: $(window).height(),
+      trackers: trackers,
+      hideFavicons: false 
+    });
+    var graph = runner.graph;
+
+    jQuery.getJSON("sample-tracking-info.json", function(data) {
+      graph.update(data);
+      setInterval(function() {
+        console.log("BYE");
+        graph.removeOne();
+      }, 1000);
+    });
+  });
+});
+</script>

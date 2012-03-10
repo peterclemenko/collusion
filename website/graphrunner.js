@@ -216,7 +216,7 @@ var GraphRunner = (function(jQuery, d3) {
       node.transition()
           .duration(1000)
           .attr("r", radius);
-
+      
       // For each node, create svg group <g> to hold circle, image, and title
       var gs = node.enter().append("svg:g")
           .attr("class", "node")
@@ -281,13 +281,18 @@ var GraphRunner = (function(jQuery, d3) {
           .attr("xlink:href", faviconURL);
       }
 
+      node.exit().remove();
+
       return node;
     }
 
     function createLinks(links) {
       var link = vis.select("g.links").selectAll("line.link")
-          .data(links)
-        .enter().append("svg:line")
+          .data(links);
+      
+      link.exit().remove();
+      
+      return link.enter().append("svg:line")
           .attr("class", function(d) { return "link from-" + d.source.index +
                                        " to-" + d.target.index; })
           .style("stroke-width", 1)
@@ -295,8 +300,6 @@ var GraphRunner = (function(jQuery, d3) {
           .attr("y1", function(d) { return d.source.y; })
           .attr("x2", function(d) { return d.target.x; })
           .attr("y2", function(d) { return d.target.y; });
-
-      return link;
     }
 
     function draw(json) {
@@ -389,6 +392,15 @@ var GraphRunner = (function(jQuery, d3) {
 
       return {
         data: null,
+        removeOne: function() {
+          if (nodes.length == 0)
+            return;
+          var bye = nodes.pop();
+          links = links.filter(function(link) {
+            return !(link.source.index == bye.index || link.target.index == bye.index);
+          });
+          this.update({});
+        },
         update: function(json) {
           this.data = json;
           drawing.force.stop();
