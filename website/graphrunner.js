@@ -387,14 +387,14 @@ var GraphRunner = (function(jQuery, d3) {
         var toId = getNodeId(options.to);
         var link = vis.select("line.to-" + toId + ".from-" + fromId);
         if (!link[0][0])
-          links.push({source: fromId, target: toId});
+          links.push({source: fromId, target: toId, time: options.time});
       }
 
       var drawing = draw({nodes: nodes, links: links});
 
       return {
         data: null,
-        removeOne: function() {
+        pop: function() {
           if (links.length == 0)
             return;
           var bye = links.pop();
@@ -409,30 +409,27 @@ var GraphRunner = (function(jQuery, d3) {
               targetCount++;
           });
           if (targetCount == 0)
-            nodes.pop();
+            delete domainIds[nodes.pop().name];
           if (sourceCount == 0)
-            nodes.pop();
+            delete domainIds[nodes.pop().name];
+          this.update({});
+          return {
+            from: bye.source.name,
+            to: bye.target.name,
+            time: bye.time
+          };
+        },
+        push: function(link) {
+          addLink(link);
           this.update({});
         },
         update: function(json) {
           this.data = json;
           drawing.force.stop();
 
-          var sortedLinks = [];
-          
-          for (var domain in json)
-            for (var referrer in json[domain].referrers)
-              sortedLinks.push({
-                from: referrer,
-                to: domain,
-                time: json[domain].referrers[referrer][0]
-              });
+          GraphRunner.sortLinks(json).forEach(addLink);
+          this.length = links.length;
 
-          sortedLinks.sort(function(a, b) {
-            return a.time - b.time;
-          });
-          sortedLinks.forEach(addLink);
-          
           for (var n = 0; n < nodes.length; n++) {
             if (json[nodes[n].name]) {
               nodes[n].wasVisited = json[nodes[n].name].visited;
@@ -489,7 +486,22 @@ var GraphRunner = (function(jQuery, d3) {
   }
 
   var GraphRunner = {
-    Runner: Runner
+    Runner: Runner,
+    sortLinks: function(json) {
+      var links = [];
+      
+      for (var domain in json)
+        for (var referrer in json[domain].referrers)
+          links.push({
+            from: referrer,
+            to: domain,
+            time: json[domain].referrers[referrer][0]
+          });
+
+      return links.sort(function(a, b) {
+        return a.time - b.time;
+      });
+    }
   };
 
   return GraphRunner;
