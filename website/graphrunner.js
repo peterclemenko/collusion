@@ -211,7 +211,9 @@ var GraphRunner = (function(jQuery, d3) {
       }
 
       var node = vis.select("g.nodes").selectAll("g.node")
-          .data(nodes);
+          .data(nodes, function(d) {
+            return d.BLARG
+          });
 
       node.transition()
           .duration(1000)
@@ -393,21 +395,44 @@ var GraphRunner = (function(jQuery, d3) {
       return {
         data: null,
         removeOne: function() {
-          if (nodes.length == 0)
+          if (links.length == 0)
             return;
-          var bye = nodes.pop();
-          links = links.filter(function(link) {
-            return !(link.source.index == bye.index || link.target.index == bye.index);
+          var bye = links.pop();
+          var sourceCount = 0;
+          var targetCount = 0;
+          links.forEach(function(link) {
+            if (link.source.index == bye.source.index ||
+                link.target.index == bye.source.index)
+              sourceCount++;
+            if (link.source.index == bye.target.index ||
+                link.target.index == bye.target.index)
+              targetCount++;
           });
+          if (targetCount == 0)
+            nodes.pop();
+          if (sourceCount == 0)
+            nodes.pop();
           this.update({});
         },
         update: function(json) {
           this.data = json;
           drawing.force.stop();
 
+          var sortedLinks = [];
+          
           for (var domain in json)
             for (var referrer in json[domain].referrers)
-              addLink({from: referrer, to: domain});
+              sortedLinks.push({
+                from: referrer,
+                to: domain,
+                time: json[domain].referrers[referrer][0]
+              });
+
+          sortedLinks.sort(function(a, b) {
+            return a.time - b.time;
+          });
+          sortedLinks.forEach(addLink);
+          
           for (var n = 0; n < nodes.length; n++) {
             if (json[nodes[n].name]) {
               nodes[n].wasVisited = json[nodes[n].name].visited;
