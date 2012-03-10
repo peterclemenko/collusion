@@ -73,7 +73,7 @@ var GraphRunner = (function(jQuery, d3) {
     }
 
     function faviconURL(d) {
-      return 'http://' + d.name + '/favicon.ico';
+      return 'http://toolness.org:8010/http/' + d.name + '.ico';
     }
 
     function showDomainInfo(d) {
