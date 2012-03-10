@@ -364,6 +364,7 @@ var GraphRunner = (function(jQuery, d3) {
       var nodes = [];
       var links = [];
       var domainIds = {};
+      var domainsVisited = {};
 
       function getNodeId(domain) {
         if (!(domain in domainIds)) {
@@ -423,19 +424,22 @@ var GraphRunner = (function(jQuery, d3) {
           addLink(link);
           this.update({});
         },
+        updateDomainMetadata: function(json) {
+          for (var domain in json) {
+            domainsVisited[domain] = json[domain].visited;
+          }
+        },
         update: function(json) {
           this.data = json;
           drawing.force.stop();
 
           GraphRunner.sortLinks(json).forEach(addLink);
           this.length = links.length;
-
+          this.updateDomainMetadata(json);
+          
           for (var n = 0; n < nodes.length; n++) {
-            if (json[nodes[n].name]) {
-              nodes[n].wasVisited = json[nodes[n].name].visited;
-            } else {
-              nodes[n].wasVisited = false;
-            }
+            if (domainsVisited[nodes[n].name])
+              nodes[n].wasVisited = true;
 
             /* For nodes that don't already have a position, initialize them near the center.
              * This way the graph will start from center. If it already has a position, leave it.

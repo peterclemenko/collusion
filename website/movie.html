@@ -30,6 +30,7 @@ $(window).ready(function() {
     jQuery.getJSON("sample-tracking-info.json", function(data) {
       var links = GraphRunner.sortLinks(data).reverse();
       var movingForward = true;
+      graph.updateDomainMetadata(data);
       setInterval(function() {
         if (movingForward) {
           if (links.length)
