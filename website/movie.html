@@ -133,7 +133,7 @@ $(window).ready(function() {
     });
     var graph = runner.graph;
 
-    jQuery.getJSON("sample-tracking-info.json", function(data) {
+    jQuery.getJSON("movie.json", function(data) {
       var links = GraphRunner.sortLinks(data);
       graph.updateDomainMetadata(data);
       var startTime = (links[0].time - 500) / 1000 * TIME_SCALE_FACTOR;
