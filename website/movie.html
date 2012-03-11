@@ -136,11 +136,12 @@ $(window).ready(function() {
     jQuery.getJSON("sample-tracking-info.json", function(data) {
       var links = GraphRunner.sortLinks(data);
       graph.updateDomainMetadata(data);
+      var startTime = (links[0].time - 500) / 1000 * TIME_SCALE_FACTOR;
       var endTime = links[links.length-1].time / 1000 * TIME_SCALE_FACTOR;
       pop.media.duration = endTime;
       links.forEach(function(link) {
         pop.colluders({
-          start: link.time / 1000 * TIME_SCALE_FACTOR,
+          start: link.time / 1000 * TIME_SCALE_FACTOR - startTime,
           end: endTime + 10,
           graph: graph,
           link: link
