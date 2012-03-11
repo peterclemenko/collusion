@@ -6,8 +6,42 @@
 html, body {
   overflow: hidden;
 }
+
+#player {
+  font-family: Monaco, "Lucida Console", monospace;
+  font-size: 10px;
+  position: fixed;
+  color: white;
+  background: rgba(0, 0, 0, 0.75);
+  padding: 4px;
+  bottom: 0px;
+  right: 0px;
+  z-index: 20000;
+  border-top: 1px dotted gray;
+  border-left: 1px dotted gray;
+}
+
+#player .scrubber {
+  width: 300px;
+}
+
+#player .timestamp {
+  padding-left: 4px;
+  min-width: 40px;
+}
+
+#player .scrubber .progress {
+  background: rgba(255, 255, 255, 0.8);
+  min-height: 10px;
+  vertical-align: middle;
+}
+
+#player div {
+  display: inline-block;
+}
 </style>
 <div id="chart"></div><!-- The d3 layout graph will go inside this div -->
+<div id="player"></div>
 <script src="d3.js"></script>
 <script src="d3.layout.js"></script>
 <script src="d3.geom.js"></script>
@@ -15,8 +49,80 @@ html, body {
 <script src="collusion-addon.js"></script>
 <script src="demo.js"></script>
 <script src="graphrunner.js"></script>
+<script src="popcorn.js"></script>
 <script>
+Popcorn.player("collusion", {
+  _setup: function() {
+    // By default, the baseplayer won't actually stop the video when
+    // the end has been reached, so we'll have to do that ourselves.
+    var alreadyTryingToPause = false;
+    var media = this;
+    var div = $(media);
+    var scrubber = $('<div class="scrubber"></div>').appendTo(div);
+    var progress = $('<div class="progress"></div>').appendTo(scrubber);
+    var timestamp = $('<div class="timestamp"></div>').appendTo(div);
+    
+    this.addEventListener("timeupdate", function() {
+      if (!alreadyTryingToPause && this.currentTime >= this.duration) {
+        alreadyTryingToPause = true;
+        this.currentTime = this.duration;
+        this.pause();
+        alreadyTryingToPause = false;
+      }
+    });
+
+    function updatePlayerUI() {
+      var percentComplete = (media.currentTime / media.duration) * 100;
+      progress.css({
+        width: percentComplete + "%"
+      });
+      timestamp.text(media.currentTime.toFixed(1).toString() + 's');
+    }
+
+    scrubber.mousedown(function(event) {
+      function scrub(event) {
+        var baseX = scrubber.offset().left;
+        var width = scrubber.width();
+        var percentage = (event.pageX - baseX) / width;
+        media.currentTime = media.duration * percentage;
+        media.dispatchEvent("timeupdate");
+      }
+
+      scrubber.bind("mousemove", function(event) {
+        scrub(event);
+      });
+      $(document).one("mouseup", function() {
+        scrubber.unbind("mousemove");
+        media.play();
+      });
+
+      media.pause();
+      scrub(event);
+      return false;
+    });
+
+    media.addEventListener("timeupdate", function() {
+      updatePlayerUI();
+    });
+  }
+});
+
+Popcorn.plugin("colluders", function(options) {
+  return {
+    start: function(event, options) {
+      options.graph.push(options.link);
+    },
+    end: function(event, options) {
+      options.graph.pop();
+    }
+  };
+});
+
+var TIME_SCALE_FACTOR = 1.0;
+
 $(window).ready(function() {
+  var pop = Popcorn.collusion("player");
+  
   // get list of known trackers from trackers.json file hosted on website:
   jQuery.getJSON("trackers.json", function(trackers) {
     var runner = GraphRunner.Runner({
@@ -28,23 +134,20 @@ $(window).ready(function() {
     var graph = runner.graph;
 
     jQuery.getJSON("sample-tracking-info.json", function(data) {
-      var links = GraphRunner.sortLinks(data).reverse();
-      var movingForward = true;
+      var links = GraphRunner.sortLinks(data);
       graph.updateDomainMetadata(data);
-      setInterval(function() {
-        if (movingForward) {
-          if (links.length)
-            graph.push(links.pop());
-          else
-            movingForward = false;
-        }
-        if (!movingForward) {
-          if (graph.length)
-            links.push(graph.pop());
-          else
-            movingForward = true;
-        }
-      }, 100);
+      var endTime = links[links.length-1].time / 1000 * TIME_SCALE_FACTOR;
+      pop.media.duration = endTime;
+      links.forEach(function(link) {
+        pop.colluders({
+          start: link.time / 1000 * TIME_SCALE_FACTOR,
+          end: endTime + 10,
+          graph: graph,
+          link: link
+        });
+      });
+      pop.media.readyState = 4;
+      pop.play();
     });
   });
 });
