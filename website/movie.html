@@ -30,6 +30,10 @@ html, body {
   min-width: 40px;
 }
 
+#player .scrubber.paused .progress {
+  background: rgba(255, 255, 255, 0.4);
+}
+
 #player .scrubber .progress {
   background: rgba(255, 255, 255, 0.8);
   min-height: 25px;
@@ -114,6 +118,23 @@ Popcorn.player("collusion", {
 
     media.addEventListener("timeupdate", function() {
       updatePlayerUI();
+    });
+    
+    media.addEventListener("play", function() {
+      scrubber.removeClass("paused");
+    });
+
+    media.addEventListener("pause", function() {
+      scrubber.addClass("paused");
+    });
+    
+    $(window).keydown(function(event) {
+      if (event.keyCode == 32) {
+        if (media.paused)
+          media.play();
+        else
+          media.pause();
+      }
     });
   }
 });
