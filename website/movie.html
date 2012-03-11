@@ -8,7 +8,6 @@ html, body {
 }
 
 #player {
-  font-family: Monaco, "Lucida Console", monospace;
   font-size: 10px;
   position: fixed;
   color: white;
@@ -16,9 +15,9 @@ html, body {
   padding: 4px;
   bottom: 0px;
   right: 0px;
+  left: 0px;
   z-index: 20000;
   border-top: 1px dotted gray;
-  border-left: 1px dotted gray;
 }
 
 #player svg.button {
@@ -29,10 +28,17 @@ html, body {
 }
 
 #player .scrubber {
-  width: 300px;
+  position: absolute;
+  left: 0px;
+  right: 0px;
+  padding-left: 30px;
+  padding-right: 45px;
 }
 
 #player .timestamp {
+  position: absolute;
+  right: 0px;
+  padding-top: 5px;
   padding-left: 4px;
   min-width: 40px;
 }
@@ -150,9 +156,13 @@ Popcorn.player("collusion", {
 
     scrubber.mousedown(function(event) {
       function scrub(event) {
-        var baseX = scrubber.offset().left;
+        var leftPadding = scrubber.css('paddingLeft').match(/([0-9]+)/)[1];
+        var baseX = scrubber.offset().left + leftPadding;
         var width = scrubber.width();
         var percentage = (event.pageX - baseX) / width;
+        
+        if (percentage < 0)
+          percentage = 0;
         media.currentTime = media.duration * percentage;
         media.dispatchEvent("timeupdate");
       }
