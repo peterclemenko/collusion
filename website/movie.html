@@ -39,8 +39,19 @@ html, body {
 #player div {
   display: inline-block;
 }
+
+#visiting {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  color: white;
+  font-family: sans-serif;
+  font-size: 40px;
+  padding: 4px;
+}
 </style>
 <div id="chart"></div><!-- The d3 layout graph will go inside this div -->
+<div id="visiting"></div>
 <div id="player"></div>
 <script src="d3.js"></script>
 <script src="d3.layout.js"></script>
@@ -118,6 +129,17 @@ Popcorn.plugin("colluders", function(options) {
   };
 });
 
+Popcorn.plugin("uservisit", function(options) {
+  return {
+    start: function(event, options) {
+      $("#visiting").text(options.domain);
+    },
+    end: function(event, options) {
+      $("#visiting").text('');
+    }
+  };
+});
+
 var TIME_SCALE_FACTOR = 1.0;
 
 $(window).ready(function() {
@@ -133,15 +155,38 @@ $(window).ready(function() {
     });
     var graph = runner.graph;
 
+    function time(msec) {
+      return msec / 1000 * TIME_SCALE_FACTOR;
+    }
+    
     jQuery.getJSON("movie.json", function(data) {
+      function relTime(msec) {
+        return time(msec) - startTime;
+      }
+
       var links = GraphRunner.sortLinks(data);
       graph.updateDomainMetadata(data);
-      var startTime = (links[0].time - 500) / 1000 * TIME_SCALE_FACTOR;
-      var endTime = links[links.length-1].time / 1000 * TIME_SCALE_FACTOR;
+      var startTime = time(links[0].time - 500);
+      var endTime = relTime(links[links.length-1].time);
       pop.media.duration = endTime;
+      var visits = [];
+      links.forEach(function(link) {
+        if (graph.hasUserVisited(link.from)) {
+          if (visits.length) {
+            if (visits[visits.length-1].domain == link.from)
+              return;
+            visits[visits.length-1].end = relTime(link.time) - 0.01;
+          }
+          visits.push({start: relTime(link.time), domain: link.from});
+        }
+      });
+      visits[visits.length-1].end = endTime + 10;
+      visits.forEach(function(visit) {
+        pop.uservisit(visit);
+      });
       links.forEach(function(link) {
         pop.colluders({
-          start: link.time / 1000 * TIME_SCALE_FACTOR - startTime,
+          start: relTime(link.time),
           end: endTime + 10,
           graph: graph,
           link: link

@@ -429,6 +429,9 @@ var GraphRunner = (function(jQuery, d3) {
             domainsVisited[domain] = json[domain].visited;
           }
         },
+        hasUserVisited: function(domain) {
+          return domainsVisited[domain];
+        },
         update: function(json) {
           this.data = json;
           drawing.force.stop();
