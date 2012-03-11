@@ -44,18 +44,23 @@ html, body {
   display: inline-block;
 }
 
-#visiting {
+#toc {
   position: fixed;
   top: 0px;
   left: 0px;
-  color: white;
+  color: gray;
   font-family: sans-serif;
-  font-size: 40px;
+  font-size: 15px;
   padding: 4px;
+  margin: 0px;
+}
+
+#toc li.visiting {
+  color: white;
 }
 </style>
 <div id="chart"></div><!-- The d3 layout graph will go inside this div -->
-<div id="visiting"></div>
+<ul id="toc"></ul>
 <div id="player"></div>
 <script src="d3.js"></script>
 <script src="d3.layout.js"></script>
@@ -153,10 +158,10 @@ Popcorn.plugin("colluders", function(options) {
 Popcorn.plugin("uservisit", function(options) {
   return {
     start: function(event, options) {
-      $("#visiting").text(options.domain);
+      options.li.addClass("visiting");
     },
     end: function(event, options) {
-      $("#visiting").text('');
+      options.li.removeClass("visiting");
     }
   };
 });
@@ -203,6 +208,8 @@ $(window).ready(function() {
       });
       visits[visits.length-1].end = endTime + 10;
       visits.forEach(function(visit) {
+        var li = $('<li></li>').text(visit.domain).appendTo("#toc");
+        visit.li = li;
         pop.uservisit(visit);
       });
       links.forEach(function(link) {
