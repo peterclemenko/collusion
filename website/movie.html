@@ -55,6 +55,15 @@ html, body {
   margin: 0px;
 }
 
+#toc li a {
+  color: inherit;
+  text-decoration: none;
+}
+
+#toc li a:hover {
+  text-decoration: underline;
+}
+
 #toc li.visiting {
   color: white;
 }
@@ -208,7 +217,14 @@ $(window).ready(function() {
       });
       visits[visits.length-1].end = endTime + 10;
       visits.forEach(function(visit) {
-        var li = $('<li></li>').text(visit.domain).appendTo("#toc");
+        var li = $('<li></li>').appendTo("#toc");
+        var a = $('<a></a>').attr('href', '#' + visit.start.toFixed(2))
+                            .text(visit.domain).appendTo(li);
+        a.mousedown(function() {
+          if (window.location.hash == $(this).attr('href'))
+            // The hash won't change, so trigger it manually.
+            $(window).trigger('hashchange');
+        });
         visit.li = li;
         pop.uservisit(visit);
       });
@@ -222,6 +238,13 @@ $(window).ready(function() {
       });
       pop.media.readyState = 4;
       pop.play();
+
+      $(window).bind("hashchange", function() {
+        var time = parseFloat(window.location.hash.slice(1));
+        if (isNaN(time))
+          time = 0;
+        pop.play(time);
+      }).trigger("hashchange");
     });
   });
 });
