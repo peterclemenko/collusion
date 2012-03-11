@@ -56,6 +56,19 @@ html, body {
   font-size: 15px;
   padding: 4px;
   margin: 0px;
+  text-shadow: black 2px 2px 2px;
+}
+
+#toc li:before {
+  content: ' » ';
+}
+
+#toc li:first-child:before {
+  content: none;
+}
+
+#toc li {
+  display: inline;
 }
 
 #toc li a {
@@ -67,7 +80,7 @@ html, body {
   text-decoration: underline;
 }
 
-#toc li.visiting {
+#toc li.visiting a {
   color: white;
 }
 </style>
