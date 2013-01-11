@@ -19,7 +19,6 @@
         .attr('width', width)
         .attr('height', height);
     var force;
-    
         
 // Resize when window resizes
 // We'll want to do this in any visualization

@@ -38,16 +38,7 @@ function getJsonNoMatterWhat(url, callback) {
   /* jQuery.getJSON fails silently when trying to get a local json file. jQuery.ajax
    * gets the data but then throws a mysterious error. However, the data is there and
    * perfectly parseable. Not sure why jQuery behaves this way but here's a workaround. */
-  jQuery.ajax(
-    {url: url,
-    dataType: "json",
-    error: function(xhr, errText, err) {
-      var trackers = JSON.parse(xhr.responseText);
-      callback(trackers);
-    },
-    success: function(text) {
-      callback(trackers);
-    }});
+   callback(CollusionAddon.trackers);
 }
 
 $(window).ready(function() {
@@ -57,7 +48,7 @@ $(window).ready(function() {
   console.log('addon: %o, graphUrl: %s', addon, graphUrl);
 
   $("#domain-infos").hide();
-
+  
   // get list of known trackers from trackers.json file hosted on website:
   getJsonNoMatterWhat("trackers.json", function(trackers) {
     var runner = GraphRunner.Runner({
@@ -125,6 +116,8 @@ $(window).ready(function() {
       $("#export-graph").click(function() {
         var data = JSON.stringify(graph.data);
         window.open("data:application/json," + data);
+		console.log('connectiosn: %o', connections);
+		window.opoen('data:application/json,' + JSON.stringify(connections));
       });
       $("#share-graph").click(function() {
         addon.shareGraph();
@@ -149,7 +142,7 @@ $(window).ready(function() {
       });
       $("#save-graph").click(function() {
         var data = JSON.stringify(graph.data);
-        ssaveGraph(data);
+        saveGraph(data);
         alert("Graph Saved!");
       });
       $("#load-graph").click(function() {
@@ -187,13 +180,13 @@ $(window).ready(function() {
 		  $('svg').height($(document).height());
 	  });
 	  
-	  function keys(obj){
+	  var keys = function(obj){
 	  	  var k = [];
 		  for (var key in obj){
 		      k.push(key);
 		  }
 		  return k;
-	  }
+	  };
 
       var setFilters = function() {
         var showCookie = $("#filter-cookie").prop("checked");

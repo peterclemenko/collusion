@@ -1,10 +1,16 @@
 var graphCallback = null;
+var connectionsCallback = null;
 
 
 unsafeWindow.onGraph = function onGraph(cb) {
   graphCallback = cb;
-  self.port.emit("init");
+  self.port.emit("initGraph");
 };
+
+unsafeWindow.onConnections = function onConnections(cb){
+	connectionsCallback = cb;
+	self.port.emit('initConnections');
+}
 
 unsafeWindow.setCollusionSounds = function setCollusionSounds(flag){
     console.log('set collusion sounds: ', flag);
@@ -24,39 +30,85 @@ self.port.on('initSounds', function(flag){
  * to 'self.port.on("log")'.
  */
 unsafeWindow.resetGraph = function resetGraph() {
-  self.port.emit('reset');
+	// version 0
+    self.port.emit('reset');
+};
+
+unsafeWindow.resetConnections = function resetConnections(){
+	// version 1.0
+	self.port.emit('resetConnections');
 };
 
 unsafeWindow.importGraph = function importGraph(data) {
-  self.port.emit('import', data);
+	// version 0
+	self.port.emit('import', data);
+};
+
+unsafeWindow.importConnections = function importConnections(data){
+	// version 1.0
+	self.port.emit('importConnections', data);
 };
 
 unsafeWindow.saveGraph = function saveGraph(data) {
-  self.port.emit('save', data);
+	// version 0
+    self.port.emit('save', data);
+};
+
+unsafeWindow.saveConnections = function saveConnections(data){
+	// version 1.0
+	self.port.emit('saveConnections', data);
 };
 
 unsafeWindow.getSavedGraph = function getSavedGraph() {
-  self.port.emit('getSavedGraph');
+	// version 0
+    self.port.emit('getSavedGraph');
 };
+
+unsafeWindow.getSavedConnections = function getSavedConnections(){
+	// version 1.0
+	self.port.emit('getSavedConnections');
+}
 
 unsafeWindow.whitelistDomain = function whitelistDomain(domain) {
   self.port.emit('whitelistDomain', {"domain": domain});
 };
 
 unsafeWindow.shareGraph = function shareGraph() {
-  self.port.emit('uploadGraph');
+	// version 0
+    self.port.emit('uploadGraph');
 };
 
-self.port.on("log", function(log) {
-  log = JSON.parse(log);
+unsafeWindow.shareConnections = function shareConnections(){
+	// version 1.0
+	self.port.emit('shareConnections');
+}
+
+self.port.on("initGraph", function(graphjson) {
+  graph = JSON.parse(graphjson);
   if (graphCallback) {
-    self.port.emit('save', JSON.stringify(log));
-    graphCallback(log);
+    self.port.emit('save', JSON.stringify(graph)); // WTF? Why are we re-stringifying?
+    graphCallback(graph);
   }
 });
 
+self.port.on('initConnections', function(connectionsjson){
+	connections = JSON.parse(connectionsjson);
+	if (connectionsCallback){
+		self.port.emit('saveConnections', connectionsjson);
+		connectionsCallback(connections);
+	}
+	
+});
+
 self.port.on("getSavedGraph", function(saved_graph) {
-  self.port.emit('import', saved_graph);
-  window.location.reload();
+	// version 0
+    self.port.emit('import', saved_graph);
+    window.location.reload();
+});
+
+self.port.on('getSavedConnections', function(saved_connections){
+	// version 1.0
+	self.port.emit('import_connections', saved_connections);
+	window.location.reload();
 });
 

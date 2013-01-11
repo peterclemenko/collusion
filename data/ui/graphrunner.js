@@ -14,7 +14,7 @@ var GraphRunner = (function(jQuery, d3) {
 
   function Runner(options) {
     var trackers = options.trackers;
-    this.width = options.width;
+    this.width = options.width; // Fixme: We're not calling new Runner, so 'this' is the global object
     this.height = options.height;
 	var runner  = this;
     var hideFavicons = options.hideFavicons;
